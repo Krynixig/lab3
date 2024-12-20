@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Клас BasicDataOperationUsingSet надає методи для виконання основних операцiй з даними типу LocalTime.
