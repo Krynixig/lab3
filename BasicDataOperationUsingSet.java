@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -111,7 +110,7 @@ public class BasicDataOperationUsingSet {
     private void sortArray() {
         long startTime = System.nanoTime();
 
-        Arrays.sort(localTimeArray);
+        localTimeArray = Arrays.stream(localTimeArray).sorted().toArray(LocalTime[]::new);
 
         Utils.printOperationDuration(startTime, "сортування масиву часу");
     }
@@ -122,7 +121,7 @@ public class BasicDataOperationUsingSet {
     private void searchArray() {
         long startTime = System.nanoTime();
 
-        int index = Arrays.binarySearch(this.localTimeArray, localTimeValueToSearch);
+        int index = Arrays.asList(localTimeArray).indexOf(localTimeValueToSearch);
 
         Utils.printOperationDuration(startTime, "пошук в масивi часу");
 
@@ -143,19 +142,9 @@ public class BasicDataOperationUsingSet {
         }
 
         long startTime = System.nanoTime();
-
-        LocalTime min = localTimeArray[0];
-        LocalTime max = localTimeArray[0];
-
-        for (LocalTime localTimeValue : localTimeArray) {
-            if (localTimeValue.isBefore(min)) {
-                min = localTimeValue;
-            }
-            if (localTimeValue.isAfter(max)) {
-                max = localTimeValue;
-            }
-        }
-
+        LocalTime min = Arrays.stream(localTimeArray).min(LocalTime::compareTo).orElse(null);
+        LocalTime max = Arrays.stream(localTimeArray).max(LocalTime::compareTo).orElse(null);
+        
         Utils.printOperationDuration(startTime, "пошук мiнiмального i максимального часу в масивi");
 
         System.out.println("Мiнiмальне значення в масивi: " + min);
@@ -167,8 +156,7 @@ public class BasicDataOperationUsingSet {
      */
     private void searchSet() {
         long startTime = System.nanoTime();
-
-        boolean isFound = this.localTimeSet.contains(localTimeValueToSearch);
+        boolean isFound = localTimeSet.contains(localTimeValueToSearch);
 
         Utils.printOperationDuration(startTime, "пошук в HashSet часу");
 
@@ -185,13 +173,13 @@ public class BasicDataOperationUsingSet {
     private void findMinAndMaxInSet() {
         if (localTimeSet == null || localTimeSet.isEmpty()) {
             System.out.println("HashSet порожнiй або не iнiцiалiзований.");
+
             return;
         }
 
         long startTime = System.nanoTime();
-
-        LocalTime min = Collections.min(localTimeSet);
-        LocalTime max = Collections.max(localTimeSet);
+        LocalTime min = localTimeSet.stream().min(LocalTime::compareTo).orElse(null);
+        LocalTime max = localTimeSet.stream().max(LocalTime::compareTo).orElse(null);
 
         Utils.printOperationDuration(startTime, "пошук мiнiмального i максимального часу в HashSet");
 
@@ -203,13 +191,7 @@ public class BasicDataOperationUsingSet {
         System.out.println("Кiлькiсть елементiв в масивi: " + localTimeArray.length);
         System.out.println("Кiлькiсть елементiв в HashSet: " + localTimeSet.size());
 
-        boolean allElementsMatch = true;
-        for (LocalTime localTimeValue : localTimeArray) {
-            if (!localTimeSet.contains(localTimeValue)) {
-                allElementsMatch = false;
-                break;
-            }
-        }
+        boolean allElementsMatch = Arrays.stream(localTimeArray).allMatch(localTimeSet::contains);
 
         if (allElementsMatch) {
             System.out.println("Всi елементи масиву присутнi в HashSet.");
@@ -243,23 +225,15 @@ class Utils {
      */
     static LocalTime[] readArrayFromFile(String pathToFile) {
         DateTimeFormatter formatter = DateTimeFormatter.ISO_TIME;
-        LocalTime[] tempArray = new LocalTime[1000];
-        int index = 0;
 
         try (BufferedReader br = new BufferedReader(new FileReader(pathToFile))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                LocalTime localTimeValue = LocalTime.parse(line, formatter);
-                tempArray[index++] = localTimeValue;
-            }
+            return br.lines()
+                    .map(line -> LocalTime.parse(line, formatter))
+                    .toArray(LocalTime[]::new);
         } catch (IOException e) {
             e.printStackTrace();
+            return new LocalTime[0];
         }
-
-        LocalTime[] finalArray = new LocalTime[index];
-        System.arraycopy(tempArray, 0, finalArray, 0, index);
-
-        return finalArray;
     }
 
     /**
